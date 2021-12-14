@@ -5,9 +5,7 @@ const route = express.Router();
 
 route.post("/signup",signup);
 route.post("/login",login);
-
-
-// route.post("/add-product",protect,addProduct);
+route.post("/add-product",protect,addProduct);
 
 
 // route.post("/postUser", postUsers);
