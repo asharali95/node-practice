@@ -2,6 +2,43 @@ const User = require("../model/userModel");
 const bcrypt = require("bcryptjs");
 const JWT = require("jsonwebtoken");
 const {promisify} = require("util");
+const uuid = require("uuid")
+const multer = require("multer");
+const { awsImageUploader } = require("../utility/AWS");
+
+
+// exports.upload = multer({ dest: 'public/images/' }) // for local disk storage
+
+// this is for diskstorage
+// ---------------------------------------------
+// const storage = multer.diskStorage({
+//   destination: (req,file, cb) =>{
+//     cb(null,"public/images/")
+//   },
+//   filename: (req,file, cb) =>{
+//     var extension = file.mimetype.split("/")[1];
+//     cb(null, `picture-${uuid.v4()}-${Date.now()}.${extension}`);
+//   }
+// })
+
+// exports.upload = multer({storage: storage });
+
+// -------------------------------------------------------
+
+const storage = multer.memoryStorage();
+exports.upload = multer({storage: storage});
+
+exports.processImages =async(req, res, next) =>{
+  try {
+    var {Location} = await awsImageUploader(req.files[0])
+    req.body.location = Location
+    next();
+  } catch (error) {
+    res.status(400).json({
+      message:error.message
+    })
+  }
+}
 
 var signJWT = (userId) =>{
   return JWT.sign({id: userId},process.env.WEB_SECRET,{expiresIn: process.env.JWT_EXPIRES_IN});
@@ -45,9 +82,12 @@ next();
 
 exports.addProduct = (req,res) =>{
   try {
+    var location = req.body.location;
     res.status(200).json({
       status:"successs",
-      message:"this is a private api"
+      data:{
+        location
+      }
     })
   } catch (error) {
     res.status(400).json({
